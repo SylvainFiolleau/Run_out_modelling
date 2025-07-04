@@ -10,8 +10,8 @@ import os
 import glob
 import sys
 
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(r'C:\Users\Fiolleau_Sylvain\PythonProject\Run_out_modelling')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.append(r'C:\Users\Fiolleau_Sylvain\PythonProject\Run_out_modelling')
 print(sys.path)
 # --- Dummy imports for illustration, replace with your actual modules ---
 import SLBL_Ortho as SLBL
