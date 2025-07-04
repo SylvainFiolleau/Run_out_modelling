@@ -10,14 +10,15 @@ import os
 import glob
 import sys
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(r'C:\Users\Fiolleau_Sylvain\PythonProject\Run_out_modelling')
 print(sys.path)
 # --- Dummy imports for illustration, replace with your actual modules ---
 import SLBL_Ortho as SLBL
 import Prep_Run_Avaframe as prep_Ava
 import avaframe
 import Consequences as Cons
-import wave_start_point as WSP
+import Wave_start_point as WSP
 import functions_Wave as FW
 
 
