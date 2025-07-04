@@ -35,10 +35,24 @@
 
 2. **Launch the GUI:**
     ```
-    python main.py
+    python Main_gui.py
     ```
-    *(Replace `main.py` with the actual entry point if different.)*
 
 ## Building an Executable
 
 To create a standalone executable:
+
+```
+pyinstaller --onefile --windowed main.py
+```
+
+The executable will be in the `dist` directory.
+
+## Troubleshooting
+
+- Make sure your Conda environment is activated before running the GUI.
+- For issues with raster or DEM files, check file paths and formats[1].
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for details.
