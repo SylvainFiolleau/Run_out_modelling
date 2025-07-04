@@ -43,7 +43,7 @@
 To create a standalone executable:
 
 ```
-pyinstaller --onefile --windowed main.py
+pyinstaller --onefile --windowed Main_gui.py
 ```
 
 The executable will be in the `dist` directory.
