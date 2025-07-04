@@ -1,6 +1,6 @@
 # Run_out_modelling
 
-**Run_out_modelling** is a Python GUI application ruuning SLBL, Avaframe and Wave propagation.
+**Run_out_modelling** is a Python GUI application running SLBL, Avaframe and Wave propagation.
 
 ## Prerequisites
 
