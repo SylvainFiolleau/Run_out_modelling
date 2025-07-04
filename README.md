@@ -14,13 +14,34 @@
     git clone https://github.com/SylvainFiolleau/Run_out_modelling.git
     cd Run_out_modelling
     ```
-
+ 
 2. **Create the Conda environment:**
         ```
         conda env create -f environment.yml
         conda activate runout
         ```
-3. **(Optional) Install PyInstaller**  
+2b. **install Avaframe in the same environment (https://docs.avaframe.org/en/1.1_rc1/developinstallwin.html):**
+    - install pip, numpy and cython in this environment:
+    ```
+    conda install pip numpy cython
+    ```
+    
+   - Clone the AvaFrame repository (in a directory of your choice: [YOURDIR]) and change into it:
+
+    ```
+    cd [YOURDIR]
+    git clone https://github.com/avaframe/AvaFrame.git
+    cd AvaFrame
+   ```
+   - Compile the cython com1DFA part and install Avaframe:
+    ```
+   python setup.py build_ext --inplace
+
+    pip install -e .
+    ```
+
+    
+4. **(Optional) Install PyInstaller**  
    If you want to build a standalone executable:
     ```
     pip install pyinstaller
