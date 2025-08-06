@@ -326,7 +326,6 @@ def prepare_and_compute_SLBL(sources_areas, dtm_path, out_folder, tolerance, IDs
     if dtm_crs != sources_areas.crs:
         print('reproject sources areas to match dtm crs')
         return
-        # sources_areas = reproject(source_areas_path, dtm_crs, data_type='shapefile')
 
     sources_areas['SourceDip'] = None
     sources_areas['SourceDir'] = None
@@ -346,9 +345,8 @@ def prepare_and_compute_SLBL(sources_areas, dtm_path, out_folder, tolerance, IDs
 
         if (math.isnan(ust_id) or math.isnan(scen_id)):
             continue
-        if sources_area['OMRADETYPE'] is None:
-            print(f'{scen_id}  scenario type none')
-            continue
+
+
         if IDs and SCENARIOID:
             if str(int(ust_id)) in IDs and str(int(scen_id)) in SCENARIOID:
                     print('Start configuring : ' + str(int(ust_id)) + ' / ' + str(int(scen_id)))

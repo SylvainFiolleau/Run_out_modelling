@@ -1,10 +1,11 @@
 import rasterio
 from rasterio.windows import from_bounds
 from rasterio.warp import reproject, Resampling
+
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import Point
-from scipy.ndimage import label
+from scipy.ndimage import label, center_of_mass
 import pandas as pd
 import os
 

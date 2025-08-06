@@ -1,16 +1,20 @@
 import rasterio
 from rasterio.merge import merge
+from rasterio.plot import show
 import numpy as np
 import os
 from rasterio.features import shapes
 import geopandas as gpd
 # Example: Open raster with rasterio
-from scipy.ndimage import binary_erosion
+import glob
+from scipy.ndimage import binary_erosion, generate_binary_structure, binary_dilation
 from skimage.morphology import disk
 import math
-from shapely.geometry import GeometryCollection
+from rasterio.mask import mask
+from shapely.geometry import box, mapping, Polygon, GeometryCollection
 from scipy.ndimage import binary_dilation, distance_transform_edt
 from rasterio.transform import from_origin
+import pandas as pd
 
 def contract_runup(input_raster_path, output_raster_path, radius_pixels=2):
     # Open the input raster
@@ -127,8 +131,9 @@ def count_points_in_polygon(polygon_gdf, pointsI, indexes=[]):
     joined = gpd.sjoin(points, polygon_gdf, how="left", predicate="within")
     joined = joined[~joined['thickness'].isna()]
     joined = joined.drop_duplicates(subset=['oest_koo', 'nord_koo'])
-
     numPoints = joined['bosatte'][~joined['thickness'].isna()].sum()
+    numPoints = joined['bosatte'].sum()
+
     Index = joined.index
 
     return numPoints, Index
@@ -211,6 +216,9 @@ def clip_raster_by_extent(runup, raster, output_path, dtm_grid, max_ingressT = 5
     # Round max_ingress to the nearest multiple of 50
     max_ingress = math.ceil(max_ingressT / 50) * 50
 
+    with rasterio.open(dtm_grid) as src_dtm:
+        # Get the bounds (xmin, ymin, xmax, ymax)
+        xmin_dtm, ymin_dtm, xmax_dtm, ymax_dtm = src_dtm.bounds
 
     # Open the raster file to get its bounds
     with rasterio.open(runup) as src1:
@@ -289,13 +297,14 @@ def OnLand(runup_raster_path, dtm_raster_path, output_raster_path):
 
 
 def grow_raster(runup_path, max_ingressT, out_path):
-    max_ingress = math.ceil(max_ingressT / 50) + 2
-    print('max_ingress:  ', max_ingress)
     with rasterio.open(runup_path) as src:
         runup = src.read(1)
         profile = src.profile
         transform = src.transform
         res = transform.a  # cell size
+
+    max_ingress = math.ceil(max_ingressT / res) + 2
+    print('max_ingress:  ', max_ingress)
 
     # Identify valid runup data
     mask_valid = np.isfinite(runup) & (runup != 0)
@@ -329,11 +338,12 @@ def extrapolate_runup(runup_raster_path, max_ingress, output_raster_path):
         runup_data = src.read(1)  # Read the first band (assuming single-band raster)
         transform = src.transform  # Get the affine transform
         nodata_value = src.nodata  # Get the nodata value
+        res = src.res[0]
 
         width, height = src.width, src.height
 
     # Calculate the number of cells for max_ingress
-    max_ingress_cells = math.ceil(max_ingress / 50) + 2
+    max_ingress_cells = math.ceil(max_ingress / res) + 2
 
     # Create a binary mask (1 where values are not nodata)
     print('nodata_value:', nodata_value)
@@ -358,12 +368,13 @@ def extrapolate_runup(runup_raster_path, max_ingress, output_raster_path):
 
 
 
-def Wave_consequence(raster_paths, people, dtm50):
+def Wave_consequence(raster_paths, people, dtm50, out_folder):
     # out_folder = r'C:\Users\Fiolleau_Sylvain\Documents\Avaframe_simulations\Wave_Outputs'
-    out_folder = r'/lustre02/sandbox/sylvain/'
+    # out_folder = r'/lustre02/sandbox/sylvain/'
     runup1 = os.path.join(out_folder, 'temp_runup1.tif')
     #merge_rasters(raster_paths, runup1, method='max', range_vals=None, weights=None)
     runup2 = os.path.join(out_folder, 'temp_runup2.tif')
+    print (runup1)
     i = 0
     print(raster_paths)
     for runup1 in raster_paths:
@@ -446,8 +457,8 @@ def Wave_consequence(raster_paths, people, dtm50):
         i += 1
     print(type(geometry))
     gdf = gpd.GeoDataFrame(geometry=[geometry], columns=["geometry"])
-    gdf["USTABILEFJELLID"] = raster_paths[0].split('/')[-3]
-    gdf["SCENARIOID"] = raster_paths[0].split('/')[-2]
+    gdf["USTABILEFJELLID"] = raster_paths[0].split('\\')[-3]
+    gdf["SCENARIOID"] = raster_paths[0].split('\\')[-2]
     gdf["Consequences"] = numpoint
 
     #
@@ -460,3 +471,62 @@ def Wave_consequence(raster_paths, people, dtm50):
         else:
             print(f"File not found: {file}")  # Optional: Print missing files
     return gdf
+        #        return result_gdf
+# # Save final result
+# final_output = "path_to_output_folder/final_result.gpkg"
+# result_gdf.to_file(final_output, driver="GPKG")
+# if __name__==__main__:
+#     columns_to_keep = ["USTABILEFJELLID", "SCENARIOID", "Consequences", "geometry"]
+#     layer_output = gpd.GeoDataFrame(columns=columns_to_keep, geometry="geometry", crs="EPSG:25833")
+#     dtm50_path = r'N:\Prosjekter\391400_Nasjonal_oversikt_over_ustabile_fjellområder\3_Konsekvensanalyse\Waves\2023\dtm_50m.tif'
+#     AllScenarios = r'C:\Users\Fiolleau_Sylvain\Documents\Avaframe_simulations\Wave_Outputs_python'
+#     Ids = os.listdir(AllScenarios)
+#     IdsFold = [item for item in Ids if os.path.isdir(os.path.join(AllScenarios, item))]
+#
+#     people = r"C:\Users\Fiolleau_Sylvain\Documents\Avaframe_simulations\Bosatte2019_25833.shp"
+#     for Id in IdsFold:
+#         scenarioIds = os.listdir(os.path.join(AllScenarios,Id))
+#         # print(scenarioIds)
+#         for scenarioId in scenarioIds:
+#             files = '*.tif'
+#             raster_paths = glob.glob(os.path.join(AllScenarios,Id, scenarioId, files))
+#             Consequences = Wave_consequence(raster_paths, people, dtm50_path)
+#             print(Consequences)
+#
+#             # print('Consequences ', Consequences.columns)
+#             if Consequences is not None and not Consequences.empty:
+#                 layer_output = pd.concat([layer_output, Consequences[columns_to_keep]], ignore_index=True)
+#     layer_output['geometry'] = layer_output['geometry'].buffer(0)
+#     layer_output.to_file(r'C:\Users\Fiolleau_Sylvain\Documents\Avaframe_simulations\Wave_Outputs_python\WaveConsequences.gpkg', driver='GPKG')
+#
+
+
+if __name__=='__main__':
+    runUp_Gp = r"R:\Arbeidsomr\Temp\Vanja\Piggtind\Wave_Consequences_ArcGis.gpkg"
+    aggregated_gdf = gpd.read_file(runUp_Gp)
+    people = r"C:\Users\Fiolleau_Sylvain\Documents\Avaframe_simulations\Bosatte2019_25833.shp"
+    points = gpd.read_file(people)
+
+    try:
+        result_gdf, index = count_points_in_polygon(aggregated_gdf, points)
+    except Exception as e:
+        print(f"Error encountered: {e}. Fixing geometries and retrying...")
+
+        # Fix geometries using buffer(0) trick
+        aggregated_gdf["geometry"] = aggregated_gdf["geometry"].buffer(0)
+
+        # Retry point counting
+        result_gdf, index = count_points_in_polygon(aggregated_gdf, points)
+
+    geometry = GeometryCollection(aggregated_gdf["geometry"].values)  # Convert to GeometryCollection
+
+    numpoint = result_gdf
+    previous_index = index
+
+    print(type(geometry))
+    gdf = gpd.GeoDataFrame(geometry=[geometry], columns=["geometry"])
+    gdf["USTABILEFJELLID"] = raster_paths[0].split('\\')[-3]
+    gdf["SCENARIOID"] = raster_paths[0].split('\\')[-2]
+    gdf["Consequences"] = numpoint
+
+

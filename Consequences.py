@@ -45,8 +45,6 @@ def process_raster_and_points(raster_path, points, ID, ScenarioID):
 
 def run_out_consequences(out_folder_SLBL, output_shapefile_path, Housing_shp_file, IDs, ScenarioIDs):
 
-    print(out_folder_SLBL)
-    out_folder_SLBL = r'C:\\Users\\Fiolleau_Sylvain\\Desktop'
     points = gpd.read_file(Housing_shp_file)
 
 
@@ -64,7 +62,7 @@ def run_out_consequences(out_folder_SLBL, output_shapefile_path, Housing_shp_fil
                     continue
             with os.scandir(os.path.join(out_folder_SLBL, entry.name)) as it2:
                 for entry2 in it2:
-                    print(entry2.name)
+                    # print(entry2.name)
                     if entry2.name.startswith('.') or entry.is_file():
 
                         continue  # skips if its not a scenario
@@ -92,6 +90,6 @@ def run_out_consequences(out_folder_SLBL, output_shapefile_path, Housing_shp_fil
 
 
     # Step 7: Save the combined polygons (with point count) to a shapefile or GeoPackage
-    print(combined_polygons)
+    # print(combined_polygons)
     combined_polygons.to_file(output_shapefile_path, driver='GPKG')
     print(f"Polygon boundary with point count saved to {output_shapefile_path}")

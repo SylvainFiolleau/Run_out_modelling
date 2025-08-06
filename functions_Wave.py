@@ -1,5 +1,7 @@
 
+import Wave_Propa as WP
 import Wave_Propa_par as WPp
+
 import numpy as np
 import time
 import geopandas as gpd
@@ -25,15 +27,18 @@ def Wave_simulation(output_dir, wave_start_points_path, max_vol, min_wave, max_w
     # load raster water
     if 'elev_model' not in locals():
         print('load water tiff')
-        with rasterio.open(water_raster_path) as dataset:
-            elev_model = {
-                'dtm': dataset.read(1),
-                'nrows': dataset.height,
-                'ncols': dataset.width,
-                'cellsize': dataset.res[0],  # Assuming square pixels
-                'xllcorner': dataset.bounds.left,
-                'yllcorner': dataset.bounds.bottom,
-            }
+        if interactive == 'ok':
+            elev_model = WP.dtm_import()
+        else:
+            with rasterio.open(water_raster_path) as dataset:
+                elev_model = {
+                    'dtm': dataset.read(1),
+                    'nrows': dataset.height,
+                    'ncols': dataset.width,
+                    'cellsize': dataset.res[0],  # Assuming square pixels
+                    'xllcorner': dataset.bounds.left,
+                    'yllcorner': dataset.bounds.bottom,
+                }
 
         is_nodata = np.logical_or(elev_model['dtm'] == 9999, elev_model['dtm'] <= -9999)
         elev_model['dtm'] = np.maximum(0, elev_model['dtm'])

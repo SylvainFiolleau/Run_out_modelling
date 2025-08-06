@@ -5,7 +5,6 @@ from osgeo import gdal
 import rasterio
 from rasterio.transform import from_origin
 from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
-import sys
 import Func_Waves_Angles as CorAngle
 
 # Global vars for multiprocessing
@@ -59,6 +58,8 @@ def init_worker(elev, nodata):
 
 
 def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, ScenarioIDs, lim_azimuth=0, save_vid=False):
+
+
     global global_elev_model, global_is_nodata
 
     # use global_elev_model instead of passing as arg
@@ -69,20 +70,24 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
     # Create directories for the sites
     site_dir = f'{result_dir}/{sites.Id[k]}/{sites.ScenarioID[k]}'
 
+    #    print(sites.WaveID[k])
     # Check if the result exists
     if os.path.isfile(f'{site_dir}/runup_id{int(sites.WaveID[k])}.tif'):
+        #        print(f'{k} exist')
         return
     else:
         print(f'k{k + 1}: site id {sites.Id[k]} of {sites.shape[0]}')
+    #        return
     os.makedirs(site_dir, exist_ok=True)
     # Initialize distance, azimuth, and other arrays
 
     distance = np.ones_like(elev_model['dtm'], dtype=np.float32) * 9999999
 
     azimuth = np.zeros_like(distance)
-    # Assuming that elev_model and sites are already defined as arrays
+
     p_row = elev_model['nrows'] - np.floor((sites.Y[k] - elev_model['yllcorner']) / elev_model['cellsize']).astype(int)
     p_col = np.floor((sites.X[k] - elev_model['xllcorner']) / elev_model['cellsize']).astype(int) + 1
+
 
     particles = np.array([[p_row, p_col, 0, 0]])
     w_ext_subs = np.array([[p_row, p_col], [p_row, p_col]])
@@ -108,9 +113,11 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
 
     dist_opt = np.linalg.norm((subs_24 * elev_model['cellsize']).T, axis=1)
     m = 1
+    #    print('before loop')
     while is_change:
         particles = np.repeat(particles, subs_8.shape[1], axis=0) + np.tile(
             np.hstack((subs_8.T, np.zeros([subs_8.shape[1], 2]))), (particles.shape[0], 1))
+        #       print('in while loop')
 
         ## check if particles in water
         is_inbound = (particles[:, 0] >= 0) & (particles[:, 0] < distance.shape[0]) & (particles[:, 1] >= 0) & (
@@ -148,6 +155,7 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
         # Calculate azimuth and update distances
         p_azimuth = particles_opt[:, :2] - particles[:, :2]
 
+
         particles[:, 3] = np.degrees(np.arccos(
             np.sum(np.column_stack((p_azimuth[:, 1], - p_azimuth[:, 0])) * np.tile([0, -1], [p_azimuth.shape[0], 1]),
                    axis=1)
@@ -168,9 +176,7 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
 
         # Update is_change and azimuth, clip to extent
         is_change = len(particles) > 0
-        if np.nanmax(distance[distance < 9999990]) > 100000:
-            print("One or more particles are farther than 100km. Stopping wave propagation.")
-            is_change = False
+
 
         if is_change:
             w_ext_subs = np.array(
@@ -202,18 +208,38 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
                w_ext_subs[0, 1].astype(int):w_ext_subs[1, 1].astype(int) + 1]
     azimuth = azimuth[w_ext_subs[1, 0].astype(int):w_ext_subs[0, 0].astype(int) + 1,
               w_ext_subs[0, 1].astype(int):w_ext_subs[1, 1].astype(int) + 1]
-
+    # print(azimuth)
+    # print(distance)
     # Calculate runup and export results
     runup = 18.093 * np.minimum(max_vol, sites.Volume[k] / 1e6) ** 0.57110 * (distance / 1000) ** -0.74189
     runup = np.minimum(max_wave, runup)
     runup = np.where(runup < min_wave, 0, runup)
 
-    Lim = 100000
+    print('runup Calc Done')
+    output_file = f'{site_dir}/runup_id{int(sites.WaveID[k])}T.tif'
+    print(output_file, np.sum(runup))
+    # gdal_write_geotiff(output_file, runup, elev_model['cellsize'], xll, yur)
+    xll = elev_model['xllcorner'] + elev_model['cellsize'] * (w_ext_subs[0, 1] - 1)
+    yll = elev_model['yllcorner'] + elev_model['cellsize'] * (elev_model['nrows'] - w_ext_subs[0, 0])
+    yur = yll + (w_ext_subs[0, 0] - w_ext_subs[1, 0] + 1) * elev_model['cellsize']
 
-    runup[distance > Lim] = 0
+    geotiffwrite(output_file, runup, 'float32', elev_model['cellsize'], xll, yur)
+    # Lim = 100000
+    #   if np.max(distance[distance<99999]) < 1000:
+    #   threshold = 10
+    #   elif np.max(distance[distance<99999]) < 10000:
+    #       threshold = 50
+    #   else:
+    #       threshold = 100
+    #    runup[distance > Lim] = 0
+    #    import rasterio
+    #    with rasterio.open(r"R:\Arbeidsomr\Temp\Vanja\Piggtind\Wave_cons\New_lim\New\runup_id1T.tif") as src:
+    #        runup = src.read(1)
+    #    k =1
     matrix = runup.copy()
     max_index = np.nanargmax(matrix)
     starting_point = np.unravel_index(max_index, matrix.shape)
+
     threshold = 100
 
     lake = np.where(matrix > 0.1, 1, 0)
@@ -235,8 +261,9 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
                     FinalRunup * (0.7 + (0.3 * np.cos(np.radians(alpha)) ** 2)),  # For alpha <= 90 degrees
                     FinalRunup * (0.4 + (0.3 * np.cos(np.radians(alpha - 90)) ** 2))  # For alpha > 90 degrees
                 )
+        print('correction_done')
     except Exception as e:
-        error_log_path = "/lustre02/home/sylvain/error_log_angles.txt"
+        error_log_path = f'{site_dir}/error_log_angles.txt'
         with open(error_log_path, "a") as f:
             f.write(f"Error in process_sites k{k + 1}: site id {sites.Id[k]} of {sites.shape[0]}: {str(e)}\n")
     xll = elev_model['xllcorner'] + elev_model['cellsize'] * (w_ext_subs[0, 1] - 1)
@@ -246,13 +273,17 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
     # Write to geotiff
     output_file = f'{site_dir}/runup_id{int(sites.WaveID[k])}.tif'
     print(output_file, np.sum(runup))
+    # gdal_write_geotiff(output_file, runup, elev_model['cellsize'], xll, yur)
 
     geotiffwrite(output_file, FinalRunup, 'float32', elev_model['cellsize'], xll, yur)
 
 
+
+
 def process_sites(sites, elev_model, is_nodata, result_dir, max_vol, min_wave, max_wave, IDs, ScenarioIDs,
                   lim_azimuth=0, save_vid=False):
-    with ThreadPoolExecutor(max_workers=10, initializer=init_worker, initargs=(elev_model, is_nodata)) as executor:
+
+    with ThreadPoolExecutor(max_workers=2, initializer=init_worker, initargs=(elev_model, is_nodata)) as executor:
         futures = [executor.submit(process_site, k, sites, result_dir, max_vol, min_wave, max_wave, IDs, ScenarioIDs,
                                    lim_azimuth=0, save_vid=False)
                    for k in range(sites.shape[0])]

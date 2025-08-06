@@ -866,7 +866,7 @@ def merge_contiguous_masks(area_masks, dilation=True):
 
     return np.array(merged_masks)
 
-def compute_lake_angles_recursive(lake1, A, B, Angles_matrices, distanceI, island_mask, threshold=20,
+def compute_lake_angles_recursive(lake1, A, B, Angles_matrices, island_mask, threshold=20,
                                   recursion_depth=0):
     """
     Recursively computes angles for wave propagation, handling branches and sub-branches.
@@ -874,7 +874,7 @@ def compute_lake_angles_recursive(lake1, A, B, Angles_matrices, distanceI, islan
     # stack = [(lake, A, B, propagated_lake, 0)]  # Initial state
     # while stack:
     #     lake, A, B, propagated_lake, recursion_depth = stack.pop()
-    distance = np.round(distanceI, decimals=1)
+    # distance = np.round(distanceI, decimals=1)
     max_angles = []
     stack = [(lake1, A, B, Angles_matrices, threshold, recursion_depth, max_angles)]  # Initial state
     while stack:
@@ -1176,7 +1176,7 @@ def extract_islands_from_lake(lake_mask):
 
 
 
-def compute_lake_angles(lake1, start_point, distance, threshold=20):
+def compute_lake_angles(lake1, start_point, threshold=20):
     ## compute the angles from the starting point as soon as the wave front needs to turn.
     ## input : shape of the lake as a binary 1 for water, 0 for ground
     ##         coordinate of the starting point
@@ -1193,7 +1193,7 @@ def compute_lake_angles(lake1, start_point, distance, threshold=20):
     lakeN = np.expand_dims(lake, axis=0)
     island_mask = extract_islands_from_lake(lake)
 
-    Angles_matrices = compute_lake_angles_recursive(lakeN, [start_point], [start_point], Angles_matrices,distance,island_mask, threshold,
+    Angles_matrices = compute_lake_angles_recursive(lakeN, [start_point], [start_point], Angles_matrices, island_mask, threshold,
                                                     recursion_depth=0)
 
     stacked_angles = np.stack(Angles_matrices, axis=0)

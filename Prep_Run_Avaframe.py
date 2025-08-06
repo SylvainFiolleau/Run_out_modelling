@@ -5,7 +5,7 @@
 
 # If it crashes at running a GRASS tool, run r.null tool from the processing toolbox to activate GRASS prior to run this script
 
-# Author: Francois Noel, 2024. Open source CC BY 4.0 (free to use, modify, sell if citing original author)
+# Author: Francois Noel, 2024. Open source CC BY 4.0 (free to use, modify, sell if citing original author) modified by S. Fiolleau
 import numpy as np
 import rasterio
 import fiona
