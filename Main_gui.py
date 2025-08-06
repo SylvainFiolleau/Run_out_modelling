@@ -11,16 +11,19 @@ import glob
 import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.append(r'C:\Users\Fiolleau_Sylvain\PythonProject\Run_out_modelling')
 print(sys.path)
 # --- Dummy imports for illustration, replace with your actual modules ---
 import SLBL_Ortho as SLBL
-import batch_Prep_Ava_WGGIS as prep_Ava
+import Prep_Run_Avaframe as prep_Ava
 import avaframe
 import Consequences as Cons
-import wave_start_point as WSP
+import Wave_start_point as WSP
 import functions_Wave as FW
 import Wave_consequences as WCons
 
+
+# import WCons
 
 class CollapsibleBox(QWidget):
     def __init__(self, title="", parent=None):
@@ -267,7 +270,7 @@ class SLBLGui(QWidget):
         if SCENARIOID:
             print('Scen')
             SCENARIOID_int = [int(id_str) for id_str in SCENARIOID]
-            print(SCENARIOID_int)
+
             sources_areas = sources_areas[sources_areas['SCENARIOID'].isin(SCENARIOID_int)]
         print(sources_areas)
         # --- SLBL ---
@@ -462,7 +465,7 @@ class SLBLGui(QWidget):
                     self.output_log.append(log)
                     return
             lim_azimuth = 100
-            parallel_run = 1
+            parallel_run = 0
 
             FW.Wave_simulation(output_dir_wave, output_starting_points, max_vol, min_wave, max_wave, False, IDs,
                                SCENARIOID, lim_azimuth, fkb_water_path, parallel_run)
@@ -481,38 +484,21 @@ class SLBLGui(QWidget):
             # layer_output = gpd.GeoDataFrame(columns=columns_to_keep, geometry="geometry", crs="EPSG:25833")
             dtm50_path = self.path_widgets['dem_50m'].text()
             columns_to_keep = ["USTABILEFJELLID", "SCENARIOID", "Consequences", "geometry"]
-            print(os.path.join(output_dir_wave))
+
             layer_output = gpd.GeoDataFrame(columns=columns_to_keep, geometry="geometry", crs="EPSG:25833")
             wave_consequences_file = self.path_widgets['wave_cons_out'].text()
             if not dtm50_path:
                 log += "No output DTM at 50m resolution selected.\n"
                 self.output_log.append(log)
                 return
-            residential_shp_file = self.path_widgets['resident_shp_wave'].text()
-            if not residential_shp_file:
-                log += "No residential shapefile selected.\n"
-                self.output_log.append(log)
-                return
-            if IDs:
-                IdsFold = [item for item in IDs if os.path.isdir(os.path.join(output_dir_wave, item))]
-            else:
-                IdsFold = os.listdir(output_dir_wave)
-            print(IdsFold)
+            IdsFold = [item for item in IDs if os.path.isdir(os.path.join(output_dir_wave, item))]
             for Id in IdsFold:
-                if SCENARIOID:
-                    scenarioIds = SCENARIOID
-                else:
-                    scenarioIds = os.listdir(os.path.join(output_dir_wave, Id))
-
+                scenarioIds = os.listdir(os.path.join(output_dir_wave, Id))
                 for scenarioId in scenarioIds:
-                    print(scenarioId)
                     files = '*.tif'
-                    raster_paths = glob.glob(os.path.normpath(os.path.join(output_dir_wave, Id, scenarioId, files)))
+                    raster_paths = glob.glob(os.path.join(output_dir_wave, Id, scenarioId, files))
                     try:
-                        Consequences = WCons.Wave_consequence(raster_paths, residential_shp_file, dtm50_path,
-                                                              output_dir_wave)
-                        log += 'consequences \n'
-                        print(Consequences)
+                        Consequences = WCons.Wave_consequence(raster_paths, residential_shp_file, dtm50_path)
                     except Exception as e:
                         log += f"Error in process_sites {Id}, {scenarioId}: {str(e)}\n"
                         continue
