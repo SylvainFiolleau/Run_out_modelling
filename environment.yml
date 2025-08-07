@@ -1,4 +1,4 @@
-name: C:\Users\Fiolleau_Sylvain\miniconda3\envs\Avaframe_env
+name: Avaframe_env
 channels:
   - conda-forge
   - defaults
@@ -214,4 +214,3 @@ dependencies:
       - tzdata==2025.2
       - urllib3==2.5.0
       - xyzservices==2025.4.0
-prefix: C:\Users\Fiolleau_Sylvain\miniconda3\envs\Avaframe_env
