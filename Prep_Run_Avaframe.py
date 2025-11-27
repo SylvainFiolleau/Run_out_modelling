@@ -213,7 +213,6 @@ def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder,
 
         USTABILEFJELLID = str(int(ust_id))
         print("Processing site: " + str(scen_id))
-        print(k)
         # Add slbl layer to project
 
         # Open the DTM raster
@@ -225,7 +224,6 @@ def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder,
             dtm_res = src_dtm.res
         with rasterio.open(path_slbl) as src_slbl:
             slbl_res = src_slbl.res
-        print(dtm_path)
         zonal_stats_result_dtm = rs.zonal_stats(sources_area_geometry, dtm_path, stats=["max"])
         zonal_stats_result_slbl = rs.zonal_stats(sources_area_geometry, path_slbl, stats=["sum"])
 
@@ -245,7 +243,6 @@ def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder,
         ava_model = sources_areas.loc[k, 'ava_model']
         ava_mu = sources_areas.loc[k, 'ava_mu']
         ava_nb_part = sources_areas.loc[k, 'ava_nb_part']
-        print(k)
         ## make folders if doesn't exist
 
         layer_ustabilefjellid = str(int(ust_id))
@@ -275,7 +272,7 @@ def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder,
         V = sources_areas.loc[k, "pre-vol"]
         phi = min(31, np.degrees(np.arctan(10 ** (0.623419 - 0.15666 * np.log10(V)))))  # truncated Scheidegger
         H = sources_areas.loc[k, 'pre-max']  # assuming H max being the max elevation of the source
-        print(sources_areas.loc[k, "pre-vol"], sources_areas.loc[k, "pre-max"])
+        # print(sources_areas.loc[k, "pre-vol"], sources_areas.loc[k, "pre-max"])
         L = H / (np.tan(np.radians(phi)))  # runout length
 
         ## calculate the dtm surface in square km if smaller than 20 clipping box is the same size of dtm
@@ -314,7 +311,6 @@ def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder,
                     "width": width_clip_dtm,  # Update the width based on the clipped raster
                     "height": height_clip_dtm  # Update the height based on the clipped raster
                 })
-            print(np.unique(clip_dtm))
 
         else:
 
@@ -504,9 +500,7 @@ def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder,
                         data[l_no] = 'dam = False\n'  # do not use a dam input
                     elif 'plotFields =' in line:  # search string
                         data[l_no] = 'plotFields = pft|pfv|FT\n'  # do not use a dam input
-        # muvoellmyminshear = 0.1
-        # xsivoellmyminshear = 300.
-        # tau0voellmyminshear = 200
+
 
         # write new modified parameter file to the site folder
         with open(os.path.join(base_dir, "local_com1DFACfg.ini"), 'w') as fp:

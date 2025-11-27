@@ -121,6 +121,23 @@ def compute_wave_start_point(runout_path, water_path, ID, scenarioID):
                 else:
                     com_x, com_y = None, None  # In case there's no volume
                 if com_x != None and com_y != None:
+
+                    col_w, row_w = ~new_transform * (com_x, com_y)
+
+                    row_w = int(round(row_w))
+                    col_w = int(round(col_w))
+                    print(water_mask)
+
+                    if not (0 <= row_w < water_mask.shape[0] and 0 <= col_w < water_mask.shape[1]):
+                        print("COM outside raster extent!")
+                    elif not water_mask[row_w, col_w]:
+                        print("COM point is NOT in water for ID:", ID, "Scenario:", scenarioID)
+                        rows, cols = np.where(water_mask)
+                        d = np.sqrt((rows - row_w) ** 2 + (cols - col_w) ** 2)
+                        idx = np.argmin(d)
+                        com_x, com_y = new_transform * (cols[idx], rows[idx])
+                    else:
+                        print("✔ COM point lies in water")
                     # Create a GeoDataFrame with a single point representing the center of mass for the entire water region
                     new_point = gpd.GeoDataFrame({
                         'Id': ID,  # Single ID for all contiguous water areas
@@ -133,12 +150,10 @@ def compute_wave_start_point(runout_path, water_path, ID, scenarioID):
                     })
                     WaveId += 1
                     gdf = pd.concat([gdf, new_point], ignore_index=True)
-                    print(totvol1)
 
             if not gdf.empty:
                 # Set the coordinate reference system (CRS) to match the volume raster
                 gdf.set_crs(water_crs, inplace=True)
-                print(total_volume)
                 print(f"Center of mass for {ID}, scenario {scenarioID} computed")
 
             else:

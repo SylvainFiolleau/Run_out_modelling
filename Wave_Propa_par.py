@@ -1,6 +1,5 @@
 import os
 import numpy as np
-from numpy.ma.extras import hstack
 from osgeo import gdal
 import rasterio
 from rasterio.transform import from_origin
@@ -41,13 +40,6 @@ def geotiffwrite(filepath, data, dtype, cellsize, xllcorner, yurcorner):
         dst.write(data, 1)
 
 
-def gdal_write_geotiff(filename, data, cellsize, xll, yur):
-    driver = gdal.GetDriverByName('GTiff')
-    rows, cols = data.shape
-    out_tif = driver.Create(filename, cols, rows, 1, gdal.GDT_Float32)
-    out_tif.SetGeoTransform((xll, cellsize, 0, yur, 0, -cellsize))
-    out_tif.GetRasterBand(1).WriteArray(data)
-    out_tif.FlushCache()
 
 
 def init_worker(elev, nodata):
@@ -217,25 +209,13 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
 
     print('runup Calc Done')
     output_file = f'{site_dir}/runup_id{int(sites.WaveID[k])}T.tif'
-    print(output_file, np.sum(runup))
-    # gdal_write_geotiff(output_file, runup, elev_model['cellsize'], xll, yur)
+
     xll = elev_model['xllcorner'] + elev_model['cellsize'] * (w_ext_subs[0, 1] - 1)
     yll = elev_model['yllcorner'] + elev_model['cellsize'] * (elev_model['nrows'] - w_ext_subs[0, 0])
     yur = yll + (w_ext_subs[0, 0] - w_ext_subs[1, 0] + 1) * elev_model['cellsize']
 
     geotiffwrite(output_file, runup, 'float32', elev_model['cellsize'], xll, yur)
-    # Lim = 100000
-    #   if np.max(distance[distance<99999]) < 1000:
-    #   threshold = 10
-    #   elif np.max(distance[distance<99999]) < 10000:
-    #       threshold = 50
-    #   else:
-    #       threshold = 100
-    #    runup[distance > Lim] = 0
-    #    import rasterio
-    #    with rasterio.open(r"R:\Arbeidsomr\Temp\Vanja\Piggtind\Wave_cons\New_lim\New\runup_id1T.tif") as src:
-    #        runup = src.read(1)
-    #    k =1
+
     matrix = runup.copy()
     max_index = np.nanargmax(matrix)
     starting_point = np.unravel_index(max_index, matrix.shape)
@@ -272,8 +252,6 @@ def process_site(k, sites, result_dir, max_vol, min_wave, max_wave, IDs, Scenari
 
     # Write to geotiff
     output_file = f'{site_dir}/runup_id{int(sites.WaveID[k])}.tif'
-    print(output_file, np.sum(runup))
-    # gdal_write_geotiff(output_file, runup, elev_model['cellsize'], xll, yur)
 
     geotiffwrite(output_file, FinalRunup, 'float32', elev_model['cellsize'], xll, yur)
 
