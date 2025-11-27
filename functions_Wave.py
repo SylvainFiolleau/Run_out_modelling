@@ -1,5 +1,4 @@
 
-import Wave_Propa as WP
 import Wave_Propa_par as WPp
 
 import numpy as np
@@ -46,11 +45,11 @@ def Wave_simulation(output_dir, wave_start_points_path, max_vol, min_wave, max_w
     print(f"Start at: {current_time1.tm_year}-{current_time1.tm_mon:02d}-{current_time1.tm_mday:02d} "
           f"{current_time1.tm_hour:0.0f}h{current_time1.tm_min:0.0f}min{current_time1.tm_sec:0.0f}s")
 
-    if par == 0:
-        WP.process_sites(sites, elev_model, is_nodata, output_dir, max_vol, min_wave, max_wave,
-                         IDs, ScenarioIDs, lim_azimuth, save_vid=save_vid)
-    elif par == 1:
-        WPp.process_sites(sites, elev_model, is_nodata, output_dir, max_vol, min_wave, max_wave,
+ #   if par == 0:
+ #       WPp.process_sites(sites, elev_model, is_nodata, output_dir, max_vol, min_wave, max_wave,
+ #                        IDs, ScenarioIDs, lim_azimuth, save_vid=save_vid)
+ #   elif par == 1:
+    WPp.process_sites(sites, elev_model, is_nodata, output_dir, max_vol, min_wave, max_wave,
                           IDs, ScenarioIDs, lim_azimuth, save_vid=save_vid)
 
     current_time2 = time.localtime()

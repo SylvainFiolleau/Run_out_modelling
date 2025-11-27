@@ -18,7 +18,7 @@
 2. **Create the Conda environment:**
         ```
         conda env create -f environment.yml
-        conda activate runout
+        conda activate Avaframe_env
         ```
 2b. **install Avaframe in the same environment (https://docs.avaframe.org/en/1.1_rc1/developinstallwin.html):**
     - install pip, numpy and cython in this environment:
@@ -51,7 +51,7 @@
 
 1. **Activate the Conda environment:**
     ```
-    conda activate runout
+    conda activate Avaframe_env
     ```
 
 2. **Launch the GUI:**
