@@ -45,7 +45,7 @@
 
 3. **Install AvaFrame**  
 
-   Follow the official guide: [AvaFrame Installation](https://docs.avaframe.org/en/1.1_rc1/developinstallwin.html)  
+   Follow the official guide without installing numpy again: [AvaFrame Installation](https://docs.avaframe.org/en/1.1_rc1/developinstallwin.html)  
 
    a. Install `pip` and `cython` in the environment:
 
