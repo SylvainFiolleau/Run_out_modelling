@@ -16,24 +16,24 @@
     ```
  
 2. **Create the Conda environment:**
-        ```
-        conda env create -f environment.yml
-        conda activate Avaframe_env
-        ```
-2b. **install Avaframe in the same environment (https://docs.avaframe.org/en/1.1_rc1/developinstallwin.html):**
-    - install pip, numpy and cython in this environment:
+     ```
+    conda env create -f environment.yml
+    conda activate Avaframe_env
     ```
-    conda install pip numpy cython
+2b. **install Avaframe in the same environment (https://docs.avaframe.org/en/1.1_rc1/developinstallwin.html):**
+    - install pip and cython in this environment:
+    ```
+    conda install pip cython
     ```
     
-   - Clone the AvaFrame repository (in a directory of your choice: [YOURDIR]) and change into it:
+   - **In Git terminal** Clone the AvaFrame repository (in a directory of your choice: [YOURDIR]) and change into it:
 
     ```
     cd [YOURDIR]
     git clone https://github.com/avaframe/AvaFrame.git
     cd AvaFrame
    ```
-   - Compile the cython com1DFA part and install Avaframe:
+   - **In conda environment** Compile the cython com1DFA part and install Avaframe:
     ```
    python setup.py build_ext --inplace
 
@@ -70,7 +70,7 @@ pyinstaller --onefile --windowed Main_gui.py
 The executable will be in the `dist` directory.
 
 ## Simpler alternative in Bash
-Change the paths accordingly
+
 '''
 @echo off
 REM === Activate conda and run script ===
