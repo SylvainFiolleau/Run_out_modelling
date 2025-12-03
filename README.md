@@ -69,6 +69,16 @@ pyinstaller --onefile --windowed Main_gui.py
 
 The executable will be in the `dist` directory.
 
+## Simpler alternative in Bash
+Change the paths accordingly
+'''
+@echo off
+REM === Activate conda and run script ===
+CALL "C:\ProgramData\anaconda3\Scripts\activate.bat" "C:\ProgramData\Conda_envs\Avaframe_env"
+python "C:\ProgramData\Run_out_modelling\Main_gui.py"
+pause
+'''
+
 ## Troubleshooting
 
 - Make sure your Conda environment is activated before running the GUI.
