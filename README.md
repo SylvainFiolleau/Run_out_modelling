@@ -20,8 +20,11 @@
     conda env create -f environment.yml
     conda activate Avaframe_env
     ```
+     
 2b. **install Avaframe in the same environment (https://docs.avaframe.org/en/1.1_rc1/developinstallwin.html):**
-    - install pip and cython in this environment:
+    -
+    install pip and cython in this environment:
+    
     ```
     conda install pip cython
     ```
