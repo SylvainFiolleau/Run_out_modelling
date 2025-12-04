@@ -1,10 +1,8 @@
 import numpy as np
 from scipy.ndimage import binary_erosion,  binary_dilation
 from math import atan2, degrees
-from scipy.spatial.distance import cdist
 from scipy.spatial import distance_matrix
 from skimage.measure import regionprops
-from skimage.segmentation import flood
 from scipy.ndimage import label as label
 from skimage.measure import label as lab
 from skimage.morphology import skeletonize
@@ -250,27 +248,27 @@ def move_point_inside(area_mask, point):
 
     return closest_point
 
-
-# Helper function: Bresenham's line algorithm
-def bresenham(x1, y1, x2, y2):
-    """Returns the points on a line between two coordinates using Bresenham's algorithm."""
-    points = []
-    dx = abs(x2 - x1)
-    dy = abs(y2 - y1)
-    sx = 1 if x1 < x2 else -1
-    sy = 1 if y1 < y2 else -1
-    err = dx - dy
-    while (x1 != x2 or y1 != y2):
-        points.append((x1, y1))
-        e2 = err * 2
-        if e2 > -dy:
-            err -= dy
-            x1 += sx
-        if e2 < dx:
-            err += dx
-            y1 += sy
-    points.append((x2, y2))  # Include last point
-    return points
+#
+# # Helper function: Bresenham's line algorithm
+# def bresenham(x1, y1, x2, y2):
+#     """Returns the points on a line between two coordinates using Bresenham's algorithm."""
+#     points = []
+#     dx = abs(x2 - x1)
+#     dy = abs(y2 - y1)
+#     sx = 1 if x1 < x2 else -1
+#     sy = 1 if y1 < y2 else -1
+#     err = dx - dy
+#     while (x1 != x2 or y1 != y2):
+#         points.append((x1, y1))
+#         e2 = err * 2
+#         if e2 > -dy:
+#             err -= dy
+#             x1 += sx
+#         if e2 < dx:
+#             err += dx
+#             y1 += sy
+#     points.append((x2, y2))  # Include last point
+#     return points
 
 
 # Find the borders of the lake
@@ -354,56 +352,56 @@ def compute_angle_for_cell(A, B, C):
     angle = atan2(BA[0] * BC[1] - BA[1] * BC[0], BA[0] * BC[0] + BA[1] * BC[1])
     return degrees(angle)
 
-
-def propagate_rays_from_line(lake, start_point, end_point):
-    """Propagate waves from each point along the line defined by start_point and end_point."""
-    propagated_lake = np.zeros_like(lake)  # Create an empty array to store the propagated area
-    # start_point = [start_point[1], start_point[0]]
-    rr, cc = line(start_point[1], start_point[0], end_point[1], end_point[0])  # note: (y, x) order
-    line_points = list(zip(cc, rr))
-    # line_points = bresenham(start_point[1], start_point[0], end_point[1], end_point[0])  # Get the line of points
-    # line_points = bresenham(start_point[0], start_point[1], end_point[0], end_point[1])  # Get the line of points
-    line_points = line_points[0::]
-    best_area_size = 0  # Variable to track the largest area
-    best_point = None  # Variable to store the point that gives the largest area
-    # plt.figure()
-    # plt.imshow(lake)
-    # plt.scatter(start_point[0], start_point[1])
-    # plt.show()
-    for point in line_points:
-        point1 = [point[1], point[0]]
-        shifted_point = point1
-        x1, y1 = shifted_point  # The current point on the line
-        # Ensure indices are within bounds
-        if x1 < 0 or x1 >= lake.shape[0] or y1 < 0 or y1 >= lake.shape[1]:
-            continue  # Skip out-of-bounds points
-
-        # Propagate the wave from the current point along the line
-        for border_point in find_borders(lake):  # Iterate over all boundary points
-            x2, y2 = border_point
-            # Trace the line from (x1, y1) to (x2, y2) using Bresenham's algorithm
-            rr, cc = line(x1, y1, x2, y2)  # note: (y, x) order
-            line_path = list(zip(cc, rr))
-            # line_path = bresenham(x1, y1, x2, y2)
-            for (x, y) in line_path:
-                # Ensure indices are within bounds
-                if x < 0 or x >= lake.shape[0] or y < 0 or y >= lake.shape[1]:
-                    continue  # Skip out-of-bounds points
-
-                if lake[x, y] == 1:  # Continue propagation only in water area
-                    propagated_lake[x, y] = 1
-                else:
-                    break  # Stop if we hit land
-
-        # Count the number of 1s in the propagated_lake (which is the area covered)
-        area_size = np.sum(propagated_lake)
-
-        # If this is the largest area, update the best point and best area size
-        if area_size > best_area_size:
-            best_area_size = area_size
-            best_point = shifted_point
-
-    return best_point, best_area_size, propagated_lake
+#
+# def propagate_rays_from_line(lake, start_point, end_point):
+#     """Propagate waves from each point along the line defined by start_point and end_point."""
+#     propagated_lake = np.zeros_like(lake)  # Create an empty array to store the propagated area
+#     # start_point = [start_point[1], start_point[0]]
+#     rr, cc = line(start_point[1], start_point[0], end_point[1], end_point[0])  # note: (y, x) order
+#     line_points = list(zip(cc, rr))
+#     # line_points = bresenham(start_point[1], start_point[0], end_point[1], end_point[0])  # Get the line of points
+#     # line_points = bresenham(start_point[0], start_point[1], end_point[0], end_point[1])  # Get the line of points
+#     line_points = line_points[0::]
+#     best_area_size = 0  # Variable to track the largest area
+#     best_point = None  # Variable to store the point that gives the largest area
+#     # plt.figure()
+#     # plt.imshow(lake)
+#     # plt.scatter(start_point[0], start_point[1])
+#     # plt.show()
+#     for point in line_points:
+#         point1 = [point[1], point[0]]
+#         shifted_point = point1
+#         x1, y1 = shifted_point  # The current point on the line
+#         # Ensure indices are within bounds
+#         if x1 < 0 or x1 >= lake.shape[0] or y1 < 0 or y1 >= lake.shape[1]:
+#             continue  # Skip out-of-bounds points
+#
+#         # Propagate the wave from the current point along the line
+#         for border_point in find_borders(lake):  # Iterate over all boundary points
+#             x2, y2 = border_point
+#             # Trace the line from (x1, y1) to (x2, y2) using Bresenham's algorithm
+#             rr, cc = line(x1, y1, x2, y2)  # note: (y, x) order
+#             line_path = list(zip(cc, rr))
+#             # line_path = bresenham(x1, y1, x2, y2)
+#             for (x, y) in line_path:
+#                 # Ensure indices are within bounds
+#                 if x < 0 or x >= lake.shape[0] or y < 0 or y >= lake.shape[1]:
+#                     continue  # Skip out-of-bounds points
+#
+#                 if lake[x, y] == 1:  # Continue propagation only in water area
+#                     propagated_lake[x, y] = 1
+#                 else:
+#                     break  # Stop if we hit land
+#
+#         # Count the number of 1s in the propagated_lake (which is the area covered)
+#         area_size = np.sum(propagated_lake)
+#
+#         # If this is the largest area, update the best point and best area size
+#         if area_size > best_area_size:
+#             best_area_size = area_size
+#             best_point = shifted_point
+#
+#     return best_point, best_area_size, propagated_lake
 
 
 def compute_lake_angles_recursive(lake1, A, B, Angles_matrices, island_mask, threshold=20,

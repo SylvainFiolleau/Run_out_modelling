@@ -1,9 +1,8 @@
 import os
 import numpy as np
-from osgeo import gdal
 import rasterio
 from rasterio.transform import from_origin
-from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
+from concurrent.futures import as_completed, ThreadPoolExecutor
 import Func_Waves_Angles as CorAngle
 
 # Global vars for multiprocessing

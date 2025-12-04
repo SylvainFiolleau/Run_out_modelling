@@ -2,7 +2,6 @@ import geopandas as gpd
 import rasterio
 from rasterio.features import shapes
 from shapely.geometry import Polygon
-import numpy as np
 from shapely.ops import unary_union
 import pandas as pd
 import os
@@ -10,7 +9,7 @@ import os
 
 # Open the raster and read data into memory
 def process_raster_and_points(raster_path, points, ID, ScenarioID):
-    print(raster_path)
+    # print(raster_path)
     with rasterio.open(raster_path) as src:
         asc_crs = points.crs
         asc_transform = src.transform

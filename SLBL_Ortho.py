@@ -3,11 +3,8 @@ import rasterio
 import geopandas as gpd
 from copy import deepcopy
 from rasterio.transform import from_origin
-from osgeo import osr
 import math
-from shapely.geometry import Point, Polygon
 import os
-import pandas as pd
 import sys
 sys.path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))

@@ -8,12 +8,8 @@
 # Author: Francois Noel, 2024. Open source CC BY 4.0 (free to use, modify, sell if citing original author) modified by S. Fiolleau
 import numpy as np
 import rasterio
-import fiona
 import geopandas as gpd
-from shapely.geometry import Polygon, box, Point
-from rasterio.enums import Resampling
-from rasterio.transform import Affine, from_bounds
-from rasterio.mask import mask
+from rasterio.transform import from_bounds
 import sys
 import os
 
@@ -24,7 +20,6 @@ import rasterstats as rs
 import FuncRunAva as FRA
 import tempfile
 import math
-import pandas as pd
 
 
 # Define the volume classification
