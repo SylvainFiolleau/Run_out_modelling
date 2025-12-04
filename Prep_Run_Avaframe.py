@@ -109,46 +109,74 @@ def raster_to_ascii(input_raster_path, output_ascii_path, nodata_value=-9999):
     )
 
 
-def save_polygon_to_shp(input_polygon, output_shp_path, crs, existing_properties=None):
-    # Check if input_polygon has geometry (this assumes input_polygon is a row from a GeoDataFrame)
-    if not hasattr(input_polygon, 'geometry') or input_polygon.geometry is None:
-        raise ValueError("Input polygon is not a valid geometry.")
+# def save_polygon_to_shp(input_polygon, output_shp_path, crs, existing_properties=None):
+#     # Check if input_polygon has geometry (this assumes input_polygon is a row from a GeoDataFrame)
+#     if not hasattr(input_polygon, 'geometry') or input_polygon.geometry is None:
+#         raise ValueError("Input polygon is not a valid geometry.")
+#
+#     # Dynamically create schema by inspecting data types of each property in the input_polygon
+#     properties_types = {key: type(input_polygon[key]).__name__ for key in input_polygon.index if key != 'geometry'}
+#
+#     # Map Python types to Fiona types
+#     type_mapping = {
+#         'int32': 'int32',
+#         'float64': 'float64',
+#         'str': 'str',
+#         'bool': 'bool',
+#         'NoneType': 'str',
+#         'Timestamp': 'str',
+#         'NaTType': 'str',
+#         'Point': 'str',
+#     }
+#
+#     # Create schema with correct types for each property
+#     schema = {'geometry': 'Polygon',
+#               'properties': {key: type_mapping.get(properties_types[key], 'str') for key in properties_types}}
+#
+#     # Construct the properties dictionary (excluding the geometry field)
+#     properties = {key: str(input_polygon[key]) for key in input_polygon.index if key != 'geometry'}
+#
+#     # Debugging: Check the properties being written and schema
+#     print(f"Schema being used: {schema}")
+#     print(f"Properties being written: {properties}")
+#
+#     # Open the shapefile for writing
+#     with fiona.open(output_shp_path, 'w', driver='ESRI Shapefile', crs=crs, schema=schema) as dst:
+#         # Use Shapely's mapping function to convert geometry to dict format
+#         # Fiona expects geometry to be in dict format (GeoJSON-like)
+#         dst.write({
+#             'geometry': input_polygon.geometry,  # Convert geometry to dict using Shapely's mapping function
+#             'properties': properties,  # The properties are now the updated ones
+#         })
 
-    # Dynamically create schema by inspecting data types of each property in the input_polygon
-    properties_types = {key: type(input_polygon[key]).__name__ for key in input_polygon.index if key != 'geometry'}
+def save_polygon_to_shp(input_row, output_shp_path, crs=None):
+    """
+    Save a single polygon (row from a GeoDataFrame) to a new shapefile using GeoPandas only.
 
-    # Map Python types to Fiona types
-    type_mapping = {
-        'int32': 'int32',
-        'float64': 'float64',
-        'str': 'str',
-        'bool': 'bool',
-        'NoneType': 'str',
-        'Timestamp': 'str',
-        'NaTType': 'str',
-        'Point': 'str',
-    }
+    Parameters
+    ----------
+    input_row : GeoSeries or pandas.Series
+        A row from a GeoDataFrame that contains a geometry.
+    output_shp_path : str
+        Path to the shapefile to create.
+    crs : str or dict, optional
+        CRS for the output. If None, the CRS is taken from the input_row if available.
+    """
+    # Check geometry
+    if "geometry" not in input_row or input_row.geometry is None:
+        raise ValueError("Input row does not contain a valid geometry.")
 
-    # Create schema with correct types for each property
-    schema = {'geometry': 'Polygon',
-              'properties': {key: type_mapping.get(properties_types[key], 'str') for key in properties_types}}
+    # Convert row to a single-row GeoDataFrame
+    gdf = gpd.GeoDataFrame([input_row], geometry="geometry")
 
-    # Construct the properties dictionary (excluding the geometry field)
-    properties = {key: str(input_polygon[key]) for key in input_polygon.index if key != 'geometry'}
+    # Set CRS if not already present
+    if crs is not None:
+        gdf = gdf.set_crs(crs)
+    elif gdf.crs is None:
+        raise ValueError("No CRS provided and input row has no CRS.")
 
-    # Debugging: Check the properties being written and schema
-    print(f"Schema being used: {schema}")
-    print(f"Properties being written: {properties}")
-
-    # Open the shapefile for writing
-    with fiona.open(output_shp_path, 'w', driver='ESRI Shapefile', crs=crs, schema=schema) as dst:
-        # Use Shapely's mapping function to convert geometry to dict format
-        # Fiona expects geometry to be in dict format (GeoJSON-like)
-        dst.write({
-            'geometry': input_polygon.geometry,  # Convert geometry to dict using Shapely's mapping function
-            'properties': properties,  # The properties are now the updated ones
-        })
-
+    # Save to shapefile (GeoPandas automatically infers schema)
+    gdf.to_file(output_shp_path)
 
 def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder, IDs, SCENARIOID, autoparam=True,
                    ava_time_step=0.1, fric_model='Voellmy', ava_mu_user=0.06, ava_t_coef=400, nb_part=10000, out_res=5,
@@ -429,8 +457,8 @@ def Prep_Ava_Simul(sources_areas, dtm_path, ava_folder, out_folder, slbl_folder,
         output_layer_path = os.path.join(base_dir, 'Inputs', 'REL', 'ava_source.shp')
         crs = sources_areas.crs
         # Assuming you have the existing properties (maybe from an existing shapefile)
-        existing_properties = {key: value for key, value in sources_areas.iloc[k].items()}
-        save_polygon_to_shp(sources_areas.iloc[k], output_layer_path, crs, existing_properties)
+        # existing_properties = {key: value for key, value in sources_areas.iloc[k].items()}
+        save_polygon_to_shp(sources_areas.iloc[k], output_layer_path, crs)#, existing_properties)
 
         #################### produce AvaFrame parameter file #################
 
